@@ -8,29 +8,29 @@ Created on Mon Jan  1 15:42:18 2024
 import numpy as np
 import matplotlib.pyplot as plt
 
-def markov_simulation_one_individual(transition_matrix, initial_vector, T):
+def markov_simulation_one_individual(transition_matrix, initial_vector, T, N):
     # Validate inputs
     n = len(transition_matrix)
     if n != len(initial_vector) or not all(len(row) == n for row in transition_matrix):
         raise ValueError("Invalid input dimensions")
 
     # Perform simulation
-    current_state = np.copy(initial_vector)
-    historical_states = np.zeros(T)
+    historical_states = np.zeros((T, N))
 
     choices = np.arange(n)
-    for t in range(T):
-        # Choose next state based on transition probabilities
-        
-        next_state = np.random.choice(choices, p=current_state)
-        print("Iteration {}: {}".format(t, next_state))
-        
-        historical_states[t] = next_state
-        
-        # Update current state for the next iteration
-        current_state = transition_matrix[next_state]
+    for i in range(N):
+        current_state = np.copy(initial_vector)
+        for t in range(T):
+            # Choose next state based on transition probabilities
+            
+            next_state = np.random.choice(choices, p=current_state)
+           
+            historical_states[t, i] = next_state
+            
+            # Update current state for the next iteration
+            current_state = transition_matrix[next_state]
     
-    return historical_states
+    return 6 - historical_states
 
 # Example using transition matrix from Maehlmann Thomas, 2006
 # Define the transition matrix and initialization vector
@@ -48,9 +48,12 @@ initial_vector = np.array([0.06984022, 0.30826882, 0.24098171, 0.22969857, 0.110
        0.04043815, 0]) # Initial classification of any company is not in default and respects the distribution of the rest of the categories in the paper
 
 # Set the number of iterations
-T = 300
+T = 3000
+N = 2000
 
 # Run the simulation
-for _ in range(20):
-    hstates = markov_simulation_one_individual(transition_matrix, initial_vector, T)
-    plt.plot(hstates)
+hstates = markov_simulation_one_individual(transition_matrix, initial_vector, T, N)
+plt.plot(hstates[0])
+plt.show()
+plt.plot(hstates.sum(axis=1))
+plt.show()
