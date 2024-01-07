@@ -7,6 +7,7 @@ Created on Mon Jan  1 15:42:18 2024
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 def markov_simulation_one_individual(transition_matrix, initial_vector, T, N):
     # Validate inputs
@@ -48,7 +49,7 @@ initial_vector_Maehlmann = np.array([0.06984022, 0.30826882, 0.24098171, 0.22969
        0.04043815, 0]) # Initial classification of any company is not in default and respects the distribution of the rest of the categories in the paper
 
 # Set the number of iterations
-T = 3000
+T = 300
 N = 2000
 
 # Run the simulation
@@ -58,8 +59,13 @@ plt.show()
 plt.plot(historical_states.sum(axis=1))
 plt.show()
 
-np.savetxt("MarkovSimulations_Maehlmann.csv", historical_states, delimiter=",")
+# np.savetxt("MarkovSimulations_Maehlmann.csv", historical_states, delimiter=",")
+# resume = pd.DataFrame(historical_states).apply(pd.Series.value_counts, axis=1).fillna(0)
+# resume.to_csv("MarkovSimulations_Maehlmann.csv")
 
+df2 = pd.melt(pd.DataFrame(historical_states))
+df2['T'] = df2.index%T
+df2.to_csv("MarkovSimulations_Maehlmann.csv")
 
 #%% Estimate Markov Chain
 ######################
