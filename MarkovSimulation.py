@@ -34,7 +34,7 @@ def markov_simulation_one_individual(transition_matrix, initial_vector, T, N):
 
 # Example using transition matrix from Maehlmann Thomas, 2006
 # Define the transition matrix and initialization vector
-transition_matrix = np.array([
+transition_matrix_Maehlmann = np.array([
     [0.6614, 0.2547, 0.0417, 0.0309, 0.0058, 0.0035, 0.0020],
     [0.0638, 0.6802, 0.1798, 0.0599, 0.0124, 0.0034, 0.0005],
     [0.0139, 0.2363, 0.4737, 0.2246, 0.0397, 0.0106, 0.0012],
@@ -44,7 +44,7 @@ transition_matrix = np.array([
     [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 1.0000]
 ])
 
-initial_vector = np.array([0.06984022, 0.30826882, 0.24098171, 0.22969857, 0.11077253,
+initial_vector_Maehlmann = np.array([0.06984022, 0.30826882, 0.24098171, 0.22969857, 0.11077253,
        0.04043815, 0]) # Initial classification of any company is not in default and respects the distribution of the rest of the categories in the paper
 
 # Set the number of iterations
@@ -52,8 +52,38 @@ T = 3000
 N = 2000
 
 # Run the simulation
-hstates = markov_simulation_one_individual(transition_matrix, initial_vector, T, N)
-plt.plot(hstates[0])
+historical_states = markov_simulation_one_individual(transition_matrix_Maehlmann, initial_vector_Maehlmann, T, N).astype(int)
+plt.plot(historical_states[0])
 plt.show()
-plt.plot(hstates.sum(axis=1))
+plt.plot(historical_states.sum(axis=1))
 plt.show()
+
+np.savetxt("MarkovSimulations_Maehlmann.csv", historical_states, delimiter=",")
+
+
+#%% Estimate Markov Chain
+######################
+
+import numpy as np
+import pymc as pm
+# import aesara.tensor as at 
+# import aesara
+
+# Generate some example data for a Markov chain with a trapping state
+n_states = len(initial_vector_Maehlmann)
+
+state_sequence_true = historical_states[:,0].astype(int)
+
+# Estimate the Markov chain with a uniform prior using pymc3
+with pm.Model() as model:
+    # Prior for transition matrix
+    transition_matrix = pm.Dirichlet('transition_matrix', a=np.ones((n_states, n_states)), shape=(n_states, n_states))
+
+    # Markov chain likelihood excluding the trapping state
+    states = pm.Categorical('states', p=transition_matrix[state_sequence_true], observed=state_sequence_true)
+    
+    # Sample from the posterior distribution
+    trace = pm.sample(1000, tune=1000, chains=2)
+
+# Plot the posterior distribution of the transition matrix
+pm.plot_posterior(trace, var_names=['transition_matrix'], color='#87ceeb')
